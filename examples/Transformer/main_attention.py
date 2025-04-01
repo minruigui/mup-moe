@@ -70,25 +70,11 @@ def coord_check(mup, lr, optimizer, batch_size, nsteps, nseeds, data_dir, args, 
     ntokens = len(corpus.dictionary)
 
     def gen(w, standparam=False):
+        import model as _model
         def f():
-            if args.arch == "transformer":
-                import model as _model
-                model = _model.TransformerModel(args, ntokens, ninp=w, nhead=args.nhead, nhid=w*args.ffn_ratio, nlayers=args.nlayers, dropout=args.dropout,
+            model = _model.TransformerModel(args, ntokens, ninp=w, nhead=args.nhead, nhid=w*args.ffn_ratio, nlayers=args.nlayers, dropout=args.dropout,
                                             tied=args.tied, bias=args.bias, encoder_var=args.init_var, 
                                             decoder_var=args.init_var, standparam=standparam).to(args.device)
-            elif args.arch == "gpt2":
-                from gpt import GPT,GPTConfig
-                config = GPTConfig(
-                    block_size=5000,
-                    vocab_size=ntokens,
-                    n_layer=args.nlayers,
-                    n_head=args.nhead,
-                    n_embd=int(w),
-                    dropout=args.dropout,
-                    standparam=standparam,
-                    ffn_ratio=args.ffn_ratio
-                )
-                model = GPT(config).to(args.device)
             model = setprec(model, args.precision)
             if standparam:
                 set_base_shapes(model, None)
@@ -99,25 +85,17 @@ def coord_check(mup, lr, optimizer, batch_size, nsteps, nseeds, data_dir, args, 
         return f
 
     optimizer = optimizer.replace('mu', '')
-    widths = 2**np.arange(7, 10 if optimizer=='sgd' else 12)
+    widths = 2**np.arange(7, 14 if optimizer=='sgd' else 12)
     models = {w: gen(w, standparam=not mup) for w in widths}
 
-    def filter_module_by_name(name):
-        # if '1' not in name:
-        #     return False
-        if 'drop' in name:
-            return False
-        if name.endswith('0') or name.endswith('1') or name == '':
-            return False
-        return True
+    
     train_data = batchify(corpus.train, batch_size, device=args.device)
-    df = get_coord_data(models, batchloader(train_data, args.bptt), mup=mup, lr=lr, optimizer=optimizer, flatten_output=True, nseeds=nseeds, nsteps=nsteps, lossfn='nll' if args.arch == 'transformer' else 'gpt2', 
-                        filter_module_by_name=filter_module_by_name)
+    df = get_coord_data(models, batchloader(train_data, args.bptt), mup=mup, lr=lr, optimizer=optimizer, flatten_output=True, nseeds=nseeds, nsteps=nsteps, lossfn='nll')
 
     prm = 'μP' if mup else 'SP'
     return plot_coord_data(df, legend=legend,
-        save_to=os.path.join(plotdir, f'{prm.lower()}_{args.arch}_{optimizer}_coord.png'),
-        suptitle=f'{prm} {args.arch} {optimizer} lr={lr} nseeds={nseeds}' if args.arch == 'transformer' else f'{prm} GPT2 {optimizer} lr={lr} nseeds={nseeds}',
+        save_to=os.path.join(plotdir, f'{prm.lower()}_trsfmr_{optimizer}_coord.png'),
+        suptitle=f'{prm} Transformer {optimizer} lr={lr} nseeds={nseeds}',
         face_color='xkcd:light grey' if not mup else None)
 
 
@@ -157,7 +135,7 @@ if __name__ == '__main__':
                         help='file location to load base shapes from')
     parser.add_argument('--d_model', type=int, default=256,
                         help='width of the model')
-    parser.add_argument('--ffn_ratio', type=int, default=4,
+    parser.add_argument('--ffn_ratio', type=int, default=1,
                         help='the ratio of d_ffn to d_model')
     parser.add_argument('--nlayers', type=int, default=2,
                         help='number of layers')
@@ -204,12 +182,12 @@ if __name__ == '__main__':
                         help='path to save logs')
     parser.add_argument('--coord_check', action='store_true',
                         help='test μ parametrization is correctly implemented by collecting statistics on coordinate distributions for a few steps of training.')
-    parser.add_argument('--coord_check_nsteps', type=int, default=20,
+    parser.add_argument('--coord_check_nsteps', type=int, default=3,
                         help='Do coord check with this many steps.')
-    parser.add_argument('--coord_check_nseeds', type=int, default=6,
+    parser.add_argument('--coord_check_nseeds', type=int, default=3,
                         help='number of seeds for testing correctness of μ parametrization')
     parser.add_argument('--deferred_init', action='store_true', help='Skip instantiating the base and delta models for mup. Requires torchdistx.')
-    parser.add_argument('--arch', type=str, default='transformer', choices=['transformer', 'gpt2'], help='architecture to use')
+    
     args = parser.parse_args()
 
     print(args)
@@ -324,8 +302,8 @@ if __name__ == '__main__':
         import os
         os.makedirs('coord_checks', exist_ok=True)
         plotdir = 'coord_checks'
-        coord_check(mup=True, lr=args.lr, optimizer=args.optimizer, batch_size=args.batch_size, nsteps=args.coord_check_nsteps, nseeds=args.coord_check_nseeds, data_dir=args.data, args=args, plotdir=plotdir, legend=True)
-        coord_check(mup=False, lr=args.lr, optimizer=args.optimizer, batch_size=args.batch_size, nsteps=args.coord_check_nsteps, nseeds=args.coord_check_nseeds, data_dir=args.data, args=args, plotdir=plotdir, legend=True)
+        coord_check(mup=True, lr=args.lr, optimizer=args.optimizer, batch_size=args.batch_size, nsteps=args.coord_check_nsteps, nseeds=args.coord_check_nseeds, data_dir=args.data, args=args, plotdir=plotdir, legend=False)
+        coord_check(mup=False, lr=args.lr, optimizer=args.optimizer, batch_size=args.batch_size, nsteps=args.coord_check_nsteps, nseeds=args.coord_check_nseeds, data_dir=args.data, args=args, plotdir=plotdir, legend=False)
         import sys; sys.exit()
 
 
@@ -347,48 +325,18 @@ if __name__ == '__main__':
                                         decoder_var=args.init_var, standparam=args.load_base_shapes=='')
             )
         else:
-            if args.arch == "transformer":
-                base_shapes = get_shapes(
-                    mdl.TransformerModel(args, ntokens, ninp=args.d_model, nhead=args.nhead, nhid=args.d_model*args.ffn_ratio, nlayers=args.nlayers, dropout=args.dropout,
-                                            tied=args.tied, bias=args.bias, encoder_var=args.init_var, 
-                                            decoder_var=args.init_var, standparam=args.load_base_shapes=='')
-                )
-                delta_shapes = get_shapes(
-                    # just need to change whatever dimension(s) we are scaling
-                    mdl.TransformerModel(args, ntokens, ninp=args.d_model*2, nhead=args.nhead, nhid=args.d_model*args.ffn_ratio*2,
-                                            nlayers=args.nlayers, dropout=args.dropout,
-                                            tied=args.tied, bias=args.bias, encoder_var=args.init_var, 
-                                            decoder_var=args.init_var, standparam=args.load_base_shapes=='')
-                )
-            elif args.arch=='gpt2':
-                from gpt import GPT,GPTConfig
-                config = GPTConfig(
-                    block_size=5000,
-                    vocab_size=ntokens,
-                    n_layer=args.nlayers,
-                    n_head=args.nhead,
-                    n_embd=args.d_model,
-                    dropout=args.dropout,
-                    standparam=args.load_base_shapes=='',
-                    ffn_ratio=args.ffn_ratio,
-
-                )
-                base_shapes = get_shapes(
-                    GPT(config)
-                )
-                delta_config = GPTConfig(
-                    block_size=5000,
-                    vocab_size=ntokens,
-                    n_layer=args.nlayers,
-                    n_head=args.nhead,
-                    n_embd=args.d_model*2,
-                    dropout=args.dropout,
-                    standparam=args.load_base_shapes=='',
-                    ffn_ratio=args.ffn_ratio,
-                )
-                delta_shapes = get_shapes(
-                    GPT(delta_config)
-                )
+            base_shapes = get_shapes(
+                mdl.TransformerModel(args, ntokens, ninp=args.d_model, nhead=args.nhead, nhid=args.d_model*args.ffn_ratio, nlayers=args.nlayers, dropout=args.dropout,
+                                        tied=args.tied, bias=args.bias, encoder_var=args.init_var, 
+                                        decoder_var=args.init_var, standparam=args.load_base_shapes=='')
+            )
+            delta_shapes = get_shapes(
+                # just need to change whatever dimension(s) we are scaling
+                mdl.TransformerModel(args, ntokens, ninp=args.d_model*2, nhead=args.nhead, nhid=args.d_model*args.ffn_ratio*2,
+                                        nlayers=args.nlayers, dropout=args.dropout,
+                                        tied=args.tied, bias=args.bias, encoder_var=args.init_var, 
+                                        decoder_var=args.init_var, standparam=args.load_base_shapes=='')
+            )
         make_base_shapes(base_shapes, delta_shapes, savefile=args.save_base_shapes)
         print('done and exit')
         import sys; sys.exit()

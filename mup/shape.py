@@ -155,6 +155,8 @@ def make_base_shapes(base_shapes, delta_shapes, savefile=None):
 def apply_infshapes(model, infshapes):
     for name, p in model.named_parameters():
         p.infshape = infshapes[name]
+        if p.infshape.ninf() == 2:
+            p.data /= p.infshape.width_mult()**0.5
 
 def set_base_shapes(model, base, rescale_params=True, delta=None, savefile=None, do_assert=True):
     '''Sets the `p.infshape` attribute for each parameter `p` of `model`.

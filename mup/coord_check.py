@@ -292,6 +292,8 @@ def _get_coord_data(models, dataloader, optcls, nsteps=3,
         torch.manual_seed(i)
         for width, model in models.items():
             model = model()
+            # print number of parameters
+            print(f'{width} model has {sum(p.numel() for p in model.parameters())} parameters')
             model = model.train()
             if cuda:
                 model = model.cuda()
@@ -320,24 +322,27 @@ def _get_coord_data(models, dataloader, optcls, nsteps=3,
                         data, target = data.cuda(), target.cuda()
                     if flatten_input:
                         data = data.view(data.size(0), -1)
-                    output = model(data)
-                    if flatten_output:
-                        output = output.view(-1, output.shape[-1])
-                    if one_hot_target:
-                        target = F.one_hot(target,
-                                  num_classes=output.size(-1)).float()
-                    if lossfn == 'xent':
-                        loss = F.cross_entropy(output, target)
-                    elif lossfn == 'mse':
-                        loss = F.mse_loss(output, target)
-                    elif lossfn == 'nll':
-                        loss = F.nll_loss(output, target)
-                    elif lossfn == 'l1':
-                        loss = F.l1_loss(output, target)
-                    elif callable(lossfn):
-                        loss = lossfn(output, target)
+                    if lossfn == 'gpt2':
+                        output,loss = model(data, targets=target)
                     else:
-                        raise NotImplementedError(f'unknown `lossfn`: {lossfn}')
+                        output = model(data)
+                        if flatten_output:
+                            output = output.view(-1, output.shape[-1])
+                        if one_hot_target:
+                            target = F.one_hot(target,
+                                    num_classes=output.size(-1)).float()
+                        if lossfn == 'xent':
+                            loss = F.cross_entropy(output, target)
+                        elif lossfn == 'mse':
+                            loss = F.mse_loss(output, target)
+                        elif lossfn == 'nll':
+                            loss = F.nll_loss(output, target)
+                        elif lossfn == 'l1':
+                            loss = F.l1_loss(output, target)
+                        elif callable(lossfn):
+                            loss = lossfn(output, target)
+                        else:
+                            raise NotImplementedError(f'unknown `lossfn`: {lossfn}')
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -472,7 +477,7 @@ def get_coord_data(models, dataloader, optimizer='sgd', lr=None, mup=True,
 def plot_coord_data(df, y='l1', save_to=None, suptitle=None, x='width', hue='module',
                     legend='full', name_contains=None, name_not_contains=None, module_list=None,
                     loglog=True, logbase=2, face_color=None, subplot_width=5,
-                    subplot_height=4):
+                    subplot_height=8):
     '''Plot coord check data `df` obtained from `get_coord_data`.
 
     Input:
@@ -541,17 +546,43 @@ def plot_coord_data(df, y='l1', save_to=None, suptitle=None, x='width', hue='mod
     if face_color is not None:
         fig.patch.set_facecolor(face_color)
     ymin, ymax = min(df[y]), max(df[y])
-    for t in ts:
-        t = int(t)
-        plt.subplot(1, len(ts), t)
-        sns.lineplot(x=x, y=y, data=df[df.t == t], hue=hue, hue_order=hue_order, legend=legend if t == 1 else None)
-        plt.title(f't={t}')
+    len_ts = len(ts)//2
+    plt.subplot(1, len_ts+1, 1)
+
+    # Draw an invisible seaborn plot just to get the legend handles/colors
+    temp_ax = sns.lineplot(
+        x=x, y=y, data=df[df.t == ts[0]],  # use any subset of data
+        hue=hue, hue_order=hue_order, legend='full'
+    )
+    handles, labels = temp_ax.get_legend_handles_labels()
+
+    # Clear the plot and use the legend only
+    plt.cla()  # Clear axes
+    plt.legend(handles=handles, labels=labels, loc='center')
+    plt.axis('off')
+    plt.title('Legend')
+    for idx, t in enumerate(ts):
+        if idx %2 == 0:
+            continue
+        t = int(t//2)
+        plt.subplot(1, len_ts+1, t+1)
+        sns.lineplot(x=x, y=y, data=df[df.t == t], hue=hue, hue_order=hue_order, legend=None)
+
+        plt.title(f't={t*2}')
         if t != 1:
             plt.ylabel('')
         if loglog:
             plt.loglog(base=logbase)
         ax = plt.gca()
         ax.set_ylim([ymin, ymax])
+        grouped = df[df.t == t].groupby('module')
+    for i, (module, group) in enumerate(grouped):
+        # Sort by x to get the last point
+        group_sorted = group.sort_values(by=x)
+        x_val = group_sorted[x].values[-1]
+        y_val = group_sorted[y].values[-1]
+        label = f'{i}'  # or f'{i}' for index
+        ax.text(x_val, y_val, label, fontsize=8, ha='left', va='center')
     if suptitle:
         plt.suptitle(suptitle)
     tight_layout(plt)

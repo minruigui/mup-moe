@@ -1,0 +1,72 @@
+# This is a base shape file encoded in yaml
+# - `null` indicates a dimension is "finite", i.e. a non-"width" dimension
+# - a number indicates the base dimension of an "infinite" dimension, i.e. some notion of "width"
+lm_head.weight:
+- null
+- 256
+transformer.h.0.attn.c_attn.bias:
+- 768
+transformer.h.0.attn.c_attn.weight:
+- 768
+- 256
+transformer.h.0.attn.c_proj.bias:
+- 256
+transformer.h.0.attn.c_proj.weight:
+- 256
+- 256
+transformer.h.0.ln_1.bias:
+- 256
+transformer.h.0.ln_1.weight:
+- 256
+transformer.h.0.ln_2.bias:
+- 256
+transformer.h.0.ln_2.weight:
+- 256
+transformer.h.0.mlp.c_fc.bias:
+- 1024
+transformer.h.0.mlp.c_fc.weight:
+- 1024
+- 256
+transformer.h.0.mlp.c_proj.bias:
+- 256
+transformer.h.0.mlp.c_proj.weight:
+- 256
+- 1024
+transformer.h.1.attn.c_attn.bias:
+- 768
+transformer.h.1.attn.c_attn.weight:
+- 768
+- 256
+transformer.h.1.attn.c_proj.bias:
+- 256
+transformer.h.1.attn.c_proj.weight:
+- 256
+- 256
+transformer.h.1.ln_1.bias:
+- 256
+transformer.h.1.ln_1.weight:
+- 256
+transformer.h.1.ln_2.bias:
+- 256
+transformer.h.1.ln_2.weight:
+- 256
+transformer.h.1.mlp.c_fc.bias:
+- 1024
+transformer.h.1.mlp.c_fc.weight:
+- 1024
+- 256
+transformer.h.1.mlp.c_proj.bias:
+- 256
+transformer.h.1.mlp.c_proj.weight:
+- 256
+- 1024
+transformer.ln_f.bias:
+- 256
+transformer.ln_f.weight:
+- 256
+transformer.wpe.weight:
+- null
+- 256
+transformer.wte.weight:
+- null
+- 256
