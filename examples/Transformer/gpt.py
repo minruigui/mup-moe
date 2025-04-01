@@ -35,6 +35,7 @@ class CausalSelfAttention(nn.Module):
         self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd, bias=config.bias)
         # output projection
         self.c_proj = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
+        self.c_proj.init_by_n_layer = True
         # regularization
         self.attn_dropout = nn.Dropout(config.dropout)
         self.resid_dropout = nn.Dropout(config.dropout)
@@ -123,7 +124,7 @@ class Block(nn.Module):
         if config.num_experts is not None:
             self.mlp = MoeLayer(
                 experts=[MLP(config) for _ in range(config.num_experts)],
-                gate=MuReadout(config.n_embd, config.num_experts, bias=False),
+                gate=MuReadout(config.n_embd, config.num_experts, bias=False) if not config.standparam else nn.Linear(config.n_embd, config.num_experts, bias=False),
                 moe_args=config
             )
         else:   
@@ -176,11 +177,11 @@ class GPT(nn.Module):
         # self.transformer.wte.weight = self.lm_head.weight # https://paperswithcode.com/method/weight-tying
 
         # init all weights
-        self.apply(self._init_weights)
+        # self.apply(self._init_weights)
         # apply special scaled init to the residual projections, per GPT-2 paper
-        for pn, p in self.named_parameters():
-            if pn.endswith('c_proj.weight'):
-                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * config.n_layer))
+        # for pn, p in self.named_parameters():
+        #     if pn.endswith('c_proj.weight'):
+        #         torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * config.n_layer))
 
         # report number of parameters
         print("number of parameters: %.2fM" % (self.get_num_params()/1e6,))
