@@ -1,0 +1,60 @@
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_setup.py:_flush():67] Current SDK version is 0.19.8
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_setup.py:_flush():67] Configure stats pid to 1736902
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_setup.py:_flush():67] Loading settings from /home/minrui/.config/wandb/settings
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_setup.py:_flush():67] Loading settings from /home/minrui/projects/mup-moe/examples/Transformer/wandb/settings
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_setup.py:_flush():67] Loading settings from environment variables
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_init.py:setup_run_log_directory():647] Logging user logs to /home/minrui/projects/mup-moe/examples/Transformer/wandb/run-20250331_192249-qlu3ki0l/logs/debug.log
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_init.py:setup_run_log_directory():648] Logging internal logs to /home/minrui/projects/mup-moe/examples/Transformer/wandb/run-20250331_192249-qlu3ki0l/logs/debug-internal.log
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_init.py:init():761] calling init triggers
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_init.py:init():766] wandb.init called with sweep_config: {}
+config: {'learning_rate': 0.02, 'architecture': 'gpt-moe', 'dataset': 'sorting_array', 'epochs': 10, 'min_value': 0, 'max_value': 20, 'array_size': 20, '_wandb': {}}
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_init.py:init():784] starting backend
+2025-03-31 19:22:49,117 INFO    MainThread:1736902 [wandb_init.py:init():788] sending inform_init request
+2025-03-31 19:22:49,122 INFO    MainThread:1736902 [backend.py:_multiprocessing_setup():101] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2025-03-31 19:22:49,122 INFO    MainThread:1736902 [wandb_init.py:init():798] backend started and connected
+2025-03-31 19:22:49,123 INFO    MainThread:1736902 [wandb_init.py:init():891] updated telemetry
+2025-03-31 19:22:49,130 INFO    MainThread:1736902 [wandb_init.py:init():915] communicating run to backend with 90.0 second timeout
+2025-03-31 19:22:49,445 INFO    MainThread:1736902 [wandb_init.py:init():990] starting run threads in backend
+2025-03-31 19:22:49,584 WARNING MainThread:1736902 [wandb_init.py:init():1472] interrupted
+Traceback (most recent call last):
+  File "/home/minrui/miniconda3/lib/python3.12/site-packages/wandb/sdk/wandb_init.py", line 1468, in init
+    return wi.init(run_settings, run_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/minrui/miniconda3/lib/python3.12/site-packages/wandb/sdk/wandb_init.py", line 1031, in init
+    run._on_start()
+  File "/home/minrui/miniconda3/lib/python3.12/site-packages/wandb/sdk/wandb_run.py", line 2410, in _on_start
+    self._backend.interface.publish_python_packages(working_set())
+  File "/home/minrui/miniconda3/lib/python3.12/site-packages/wandb/sdk/interface/interface.py", line 343, in publish_python_packages
+    for pkg in working_set:
+               ^^^^^^^^^^^
+  File "/home/minrui/miniconda3/lib/python3.12/site-packages/wandb/util.py", line 1937, in working_set
+    yield InstalledDistribution(key=d.metadata["Name"], version=d.version)
+                                                                ^^^^^^^^^
+  File "/home/minrui/miniconda3/lib/python3.12/importlib/metadata/__init__.py", line 467, in version
+    return self.metadata['Version']
+           ^^^^^^^^^^^^^
+  File "/home/minrui/miniconda3/lib/python3.12/importlib/metadata/__init__.py", line 452, in metadata
+    return _adapters.Message(email.message_from_string(text))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/minrui/miniconda3/lib/python3.12/email/__init__.py", line 37, in message_from_string
+    return Parser(*args, **kws).parsestr(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/minrui/miniconda3/lib/python3.12/email/parser.py", line 64, in parsestr
+    return self.parse(StringIO(text), headersonly=headersonly)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/minrui/miniconda3/lib/python3.12/email/parser.py", line 53, in parse
+    feedparser.feed(data)
+  File "/home/minrui/miniconda3/lib/python3.12/email/feedparser.py", line 174, in feed
+    self._call_parse()
+  File "/home/minrui/miniconda3/lib/python3.12/email/feedparser.py", line 178, in _call_parse
+    self._parse()
+  File "/home/minrui/miniconda3/lib/python3.12/email/feedparser.py", line 238, in _parsegen
+    self._parse_headers(headers)
+  File "/home/minrui/miniconda3/lib/python3.12/email/feedparser.py", line 486, in _parse_headers
+    self._cur.set_raw(*self.policy.header_source_parse(lastvalue))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/minrui/miniconda3/lib/python3.12/email/_policybase.py", line 310, in header_source_parse
+    value = ''.join((value, *sourcelines[1:])).lstrip(' \t\r\n')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+2025-03-31 19:22:50,450 INFO    MsgRouterThr:1736902 [mailbox.py:close():129] Closing mailbox, abandoning 0 handles.

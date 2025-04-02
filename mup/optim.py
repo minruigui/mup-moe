@@ -34,8 +34,33 @@ def process_param_groups(params, **kwargs):
         if 'weight_decay' not in param_group:
             param_group['weight_decay'] = kwargs.get('weight_decay', 0.)
     return param_groups
-
-def MuAdam(params, impl=Adam, decoupled_wd=False, **kwargs):
+def dMuAdam(params,infshapes,impl=Adam, decoupled_wd=False, **kwargs):
+    new_param_groups = []
+    for param_group in process_param_groups(params, **kwargs):
+        # For every existing param group, we split into several new groups
+        def new_group():
+            new_g = {k:v for k, v in param_group.items() if k != 'params'}
+            new_g['params'] = []
+            return new_g
+        # The matrix-like weights might need multiple groups since weights
+        # might have different width multipliers
+        matrix_like_p = defaultdict(new_group) # key is width_mult
+        vector_like_p = new_group()
+        for name,p in param_group['params']:
+            if infshapes[name].ninf() == 2:
+                matrix_like_p[infshapes[name].width_mult()]['params'].append(p)
+            elif infshapes[name].ninf() > 2:
+                raise NotImplementedError('more than 2 inf dimensions')
+            else:
+                vector_like_p['params'].append(p)
+        for width_mult, group in matrix_like_p.items():
+            # Scale learning rate and weight decay accordingly
+            group['lr'] /= width_mult
+            if not decoupled_wd:
+                group['weight_decay'] *= width_mult
+        new_param_groups.extend(list(matrix_like_p.values()) + [vector_like_p])
+    return impl(new_param_groups, **kwargs)
+def MuAdam(params,impl=Adam, decoupled_wd=False, **kwargs):
     '''Adam with μP scaling.
 
     Note for this to work properly, your model needs to have its base shapes set

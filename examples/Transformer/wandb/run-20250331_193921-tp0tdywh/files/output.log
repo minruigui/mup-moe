@@ -1,0 +1,24 @@
+Activated expert has 263424 parameters
+Activated expert has 263424 parameters
+Activated expert has 263424 parameters
+Activated expert has 263424 parameters
+number of parameters: 2.38M
+Epoch 1/10, Loss: 2.0227, Duration: 3.84s
+Epoch 2/10, Loss: 1.6112, Duration: 3.09s
+Epoch 3/10, Loss: 1.5448, Duration: 3.17s
+Epoch 4/10, Loss: 1.5212, Duration: 3.78s
+Epoch 5/10, Loss: 1.5212, Duration: 3.79s
+Epoch 6/10, Loss: 1.4995, Duration: 3.76s
+Epoch 7/10, Loss: 1.5043, Duration: 3.82s
+Epoch 8/10, Loss: 1.5132, Duration: 3.80s
+Epoch 9/10, Loss: 1.5033, Duration: 3.83s
+Epoch 10/10, Loss: 1.4935, Duration: 3.81s
+Test Input: [19 15  9  9  6  9  7  0 17  7  2  0  0 18  0  6  0  3  0 10]
+Expected  sorted: [ 0  0  0  0  0  0  2  3  6  6  7  7  9  9  9 10 15 17 18 19]
+Model Prediction: [ 0  0  0  0  0  2  3  6  6  6  7  7  9  9  9 10 15 17 18 19]
+-----
+Test Input: [ 6  5  4  1  2  1 13  8  0  1 13  8  1 13  1  5  4  8  1 20]
+Expected  sorted: [ 0  1  1  1  1  1  1  2  4  4  5  5  6  8  8  8 13 13 13 20]
+Model Prediction: [ 0  1  1  1  1  1  1  2  4  4  5  5  6  8  8  8 13 13  0 20]
+-----
+Accuracy over 100 tests: 98.00%

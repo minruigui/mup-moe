@@ -3,6 +3,8 @@ ResNet*/data/
 Transformer*/data/*
 dataset/*
 
+examples/stat_*.json
+
 # jupyter checkpoints
 **/.ipynb_checkpoints
 

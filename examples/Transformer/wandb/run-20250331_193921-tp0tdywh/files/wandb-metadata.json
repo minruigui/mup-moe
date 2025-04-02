@@ -1,0 +1,84 @@
+{
+  "os": "Linux-5.15.0-73-generic-x86_64-with-glibc2.35",
+  "python": "CPython 3.12.9",
+  "startedAt": "2025-04-01T02:39:21.219050Z",
+  "program": "/home/minrui/projects/mup-moe/examples/Transformer/test_gpt.py",
+  "codePath": "examples/Transformer/test_gpt.py",
+  "git": {
+    "remote": "https://github.com/minruigui/mup-moe.git",
+    "commit": "47f1208e1e493e4c4c5884b1cc961950f2f00a9b"
+  },
+  "email": "guiminrui215@gmail.com",
+  "root": "/home/minrui/projects/mup-moe/examples/Transformer",
+  "host": "uclaml03.cs.ucla.edu",
+  "executable": "/home/minrui/miniconda3/bin/python",
+  "codePathLocal": "test_gpt.py",
+  "cpu_count": 32,
+  "cpu_count_logical": 64,
+  "gpu": "NVIDIA RTX A6000",
+  "gpu_count": 8,
+  "disk": {
+    "/": {
+      "total": "21464350720",
+      "used": "16687841280"
+    }
+  },
+  "memory": {
+    "total": "540893401088"
+  },
+  "cpu": {
+    "count": 32,
+    "countLogical": 64
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA RTX A6000",
+      "memoryTotal": "51527024640",
+      "cudaCores": 10752,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA RTX A6000",
+      "memoryTotal": "51527024640",
+      "cudaCores": 10752,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA RTX A6000",
+      "memoryTotal": "51527024640",
+      "cudaCores": 10752,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA RTX A6000",
+      "memoryTotal": "51527024640",
+      "cudaCores": 10752,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA RTX A6000",
+      "memoryTotal": "51527024640",
+      "cudaCores": 10752,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA RTX A6000",
+      "memoryTotal": "51527024640",
+      "cudaCores": 10752,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA RTX A6000",
+      "memoryTotal": "51527024640",
+      "cudaCores": 10752,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA RTX A6000",
+      "memoryTotal": "51527024640",
+      "cudaCores": 10752,
+      "architecture": "Ampere"
+    }
+  ],
+  "cudaVersion": "12.1"
+}

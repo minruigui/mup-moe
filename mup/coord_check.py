@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
+import math
 
 
 def cov(x):
@@ -152,7 +153,11 @@ def _record_coords(records, width, modulename, t,
                 'module': modulename,
                 't': t
             }
-
+            if isinstance(module, torch.nn.Linear):
+                if hasattr(module.weight, 'data'):
+                    ret['weight_rms'] = torch.sqrt(torch.mean(module.weight.data ** 2)).item()
+                if module.weight.grad is not None:
+                    ret['grad_rms'] = torch.sqrt(torch.mean(module.weight.grad.data ** 2)).item()
             # output stats
             if isinstance(output, (tuple, list)):
                 for i, out in enumerate(output):
@@ -167,7 +172,10 @@ def _record_coords(records, width, modulename, t,
             elif isinstance(output, torch.Tensor):
                 _ret = copy(ret)
                 for fname, f in output_fdict.items():
-                    _ret[fname] = f(output).item()
+                    v = f(output).item()
+                    if math.isnan(v):
+                        print(v,output.shape,fname,"is nan")
+                    _ret[fname] = v
                 records.append(_ret)
             else:
                 raise NotImplementedError(f'Unexpected output type: {type(output)}')
@@ -293,7 +301,7 @@ def _get_coord_data(models, dataloader, optcls, nsteps=3,
         for width, model in models.items():
             model = model()
             # print number of parameters
-            print(f'{width} model has {sum(p.numel() for p in model.parameters())} parameters')
+            # print(f'{width} model has {sum(p.numel() for p in model.parameters())} parameters')
             model = model.train()
             if cuda:
                 model = model.cuda()
@@ -546,7 +554,7 @@ def plot_coord_data(df, y='l1', save_to=None, suptitle=None, x='width', hue='mod
     if face_color is not None:
         fig.patch.set_facecolor(face_color)
     ymin, ymax = min(df[y]), max(df[y])
-    len_ts = len(ts)//2
+    len_ts = len(ts)
     plt.subplot(1, len_ts+1, 1)
 
     # Draw an invisible seaborn plot just to get the legend handles/colors
@@ -562,13 +570,13 @@ def plot_coord_data(df, y='l1', save_to=None, suptitle=None, x='width', hue='mod
     plt.axis('off')
     plt.title('Legend')
     for idx, t in enumerate(ts):
-        if idx %2 == 0:
-            continue
-        t = int(t//2)
+        # if idx %2 == 0:
+        #     continue
+        t = int(t)
         plt.subplot(1, len_ts+1, t+1)
         sns.lineplot(x=x, y=y, data=df[df.t == t], hue=hue, hue_order=hue_order, legend=None)
 
-        plt.title(f't={t*2}')
+        plt.title(f't={t}')
         if t != 1:
             plt.ylabel('')
         if loglog:

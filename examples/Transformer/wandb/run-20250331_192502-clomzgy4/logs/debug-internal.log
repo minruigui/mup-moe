@@ -1,0 +1,16 @@
+{"time":"2025-03-31T19:25:02.988890024-07:00","level":"INFO","msg":"stream: starting","core version":"0.19.8","symlink path":"/home/minrui/projects/mup-moe/examples/Transformer/wandb/run-20250331_192502-clomzgy4/logs/debug-core.log"}
+{"time":"2025-03-31T19:25:03.098830958-07:00","level":"INFO","msg":"created new stream","id":"clomzgy4"}
+{"time":"2025-03-31T19:25:03.098886487-07:00","level":"INFO","msg":"stream: started","id":"clomzgy4"}
+{"time":"2025-03-31T19:25:03.098972866-07:00","level":"INFO","msg":"writer: Do: started","stream_id":"clomzgy4"}
+{"time":"2025-03-31T19:25:03.098992255-07:00","level":"INFO","msg":"handler: started","stream_id":"clomzgy4"}
+{"time":"2025-03-31T19:25:03.099127494-07:00","level":"INFO","msg":"sender: started","stream_id":"clomzgy4"}
+{"time":"2025-03-31T19:25:03.28865977-07:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-03-31T19:26:42.951947972-07:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-03-31T19:26:42.953002418-07:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-03-31T19:26:43.827016967-07:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-03-31T19:26:43.949596655-07:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-03-31T19:26:43.953717601-07:00","level":"INFO","msg":"stream: closing","id":"clomzgy4"}
+{"time":"2025-03-31T19:26:43.95375121-07:00","level":"INFO","msg":"handler: closed","stream_id":"clomzgy4"}
+{"time":"2025-03-31T19:26:43.95376358-07:00","level":"INFO","msg":"writer: Close: closed","stream_id":"clomzgy4"}
+{"time":"2025-03-31T19:26:43.95381652-07:00","level":"INFO","msg":"sender: closed","stream_id":"clomzgy4"}
+{"time":"2025-03-31T19:26:43.953867729-07:00","level":"INFO","msg":"stream: closed","id":"clomzgy4"}

@@ -15,6 +15,7 @@ class MuReadout(Linear):
         self.output_mult = output_mult
         self.readout_zero_init = readout_zero_init
         super().__init__(*args, **kwargs)
+        self.mult = args[0]/128
     
     def reset_parameters(self) -> None:
         if self.readout_zero_init:
@@ -25,12 +26,13 @@ class MuReadout(Linear):
             super().reset_parameters()
 
     def width_mult(self):
-        assert hasattr(self.weight, 'infshape'), (
-            'Please call set_base_shapes(...). If using torch.nn.DataParallel, '
-            'switch to distributed training with '
-            'torch.nn.parallel.DistributedDataParallel instead'
-        )
-        return self.weight.infshape.width_mult()
+        # # assert hasattr(self.weight, 'infshape'), (
+        # #     'Please call set_base_shapes(...). If using torch.nn.DataParallel, '
+        # #     'switch to distributed training with '
+        # #     'torch.nn.parallel.DistributedDataParallel instead'
+        # # )
+        # return self.weight.infshape.width_mult()
+        return self.mult
 
     def _rescale_parameters(self):
         '''Rescale parameters to convert SP initialization to μP initialization.

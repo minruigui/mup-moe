@@ -22,8 +22,10 @@ from torch.distributed.fsdp.wrap import (
 )
 from mup.coord_check import _record_coords
 from mup import MuAdam, MuSGD, get_shapes, make_base_shapes, set_base_shapes
+from mup.shape import _extract_shapes,_zip_infshape_dict
 import os
 import math
+from mup.optim import dMuAdam as Adam
 import argparse
 
 def setup(rank, world_size):
@@ -53,7 +55,7 @@ def cleanup():
     dist.destroy_process_group()
   
 hidden_size = 128
-n_layer = 4
+n_layer = 8
 min_value = 0
 max_value = 20
 array_size = 20
@@ -67,8 +69,12 @@ def save_shape():
    base_shapes = get_shapes(gpt)
    delta_shapes = get_shapes(delta_gpt)
    make_base_shapes(base_shapes, delta_shapes, savefile="./gpt_base_shape.bsh")
-
-def fsdp_main(rank, world_size,width):
+def get_infshapes(model,base):
+    base_shapes = _extract_shapes(base)
+    shapes = get_shapes(model)
+    infshapes = _zip_infshape_dict(base_shapes, shapes)
+    return infshapes
+def fsdp_main(rank, world_size,width,args):
     setup(rank, world_size)
     epochs = 10
     #get datetime
@@ -95,17 +101,20 @@ def fsdp_main(rank, world_size,width):
             })
 
 
-
+    def filter_module_by_name(name:str):
+        # if '0' in name and 'transformer' in name:
+        #     return True
+        return True
 
     # Create Dataset and DataLoader
     dataset = SortingDataset(num_samples=50000, array_size=array_size, min_value=min_value, max_value=max_value)
     sampler = DistributedSampler(dataset, rank=rank, num_replicas=world_size, shuffle=True)
-    data_loader = DataLoader(dataset, batch_size=32, sampler=sampler)
+    data_loader = DataLoader(dataset, batch_size=int(32/world_size), sampler=sampler)
     my_auto_wrap_policy = functools.partial(
         size_based_auto_wrap_policy, min_num_params=100
     )
     config =GPTConfig(vocab_size=(max_value - min_value + 1), block_size=array_size * 2, n_layer=n_layer, n_head=8, n_embd=width
-        ,standparam=True)
+        ,standparam=not args.mup)
     torch.cuda.set_device(rank)
     def _init_weights(module):
         if isinstance(module, torch.nn.Linear):
@@ -119,25 +128,50 @@ def fsdp_main(rank, world_size,width):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
     # Initialize model
     with torch.device("meta"):
-        model = GPT(config).to_empty(device=rank)
+        model = GPT(config)
+
     fully_shard(model)
     model.to_empty(device=rank)
     model.apply(_init_weights)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    if args.mup:
+        set_base_shapes(model, args.base_shape_path)
+    if args.mup:
+        infshapes = get_infshapes(model, args.base_shape_path)
+        optimizer = Adam(model.named_parameters(),infshapes, lr=1e-3)
+    else:
+        optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
     # Training loop
     model.train()
-
+    df = []
     for epoch in range(epochs):
         epoch_start_time = time.time()
         total_loss = 0
-        for batch in data_loader:
+        for batch_idx,batch in enumerate(data_loader,1):
+            if rank == 0:
+                remove_hooks = []
+                for name, module in model.named_modules():
+                    if filter_module_by_name and not filter_module_by_name(name):
+                        continue
+                    remove_hooks.append(module.register_forward_hook(
+                        _record_coords(df, width, name, batch_idx,
+                            output_fdict=None,
+                            input_fdict=None,
+                            param_fdict=None)))
             inputs, labels = batch['input'].to(rank), batch['label'].to(rank)
             x = torch.concat([inputs, labels], dim=-1)
             optimizer.zero_grad()
             logits, loss = model(x[:, :-1], x[:, 1:].clone())
             loss.backward()
             optimizer.step()
+            if rank == 0:
+                for handle in remove_hooks:
+                    handle.remove()
+            if batch_idx == 500:
+                if rank ==  0:
+                    import json
+                    json.dump(df,open(f'./stat_{rank}_{width}.json','w'))
+                exit(0)
             total_loss += loss.item()
         avg_loss = total_loss / len(data_loader)
         if rank==0:
@@ -196,12 +230,17 @@ if __name__ == "__main__":
                     epilog='Text at the bottom of help')
     
     parser.add_argument("--make_base_shape",action="store_true")
+    parser.add_argument("--mup",action="store_true")
+    parser.add_argument("--base_shape_path",type=str,default=None)
     args = parser.parse_args()
     if args.make_base_shape:
         save_shape()
         exit(0)
     WORLD_SIZE = torch.cuda.device_count()
-    mp.spawn(fsdp_main,
-        args=(WORLD_SIZE,hidden_size),
-        nprocs=WORLD_SIZE,
-        join=True)
+    import numpy as np
+    widths = 2**np.arange(7, 12)
+    for width in widths:
+        mp.spawn(fsdp_main,
+            args=(WORLD_SIZE,int(width),args),
+            nprocs=WORLD_SIZE,
+            join=True)
